@@ -63,3 +63,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Caveat handwriting font
+
+Locally bundled with `@fontsource/caveat` for personal letters and the message editor. Cyrillic and Latin subsets, normal weight 400. The font's license is preserved in `public/fonts/caveat-LICENSE.txt`.
