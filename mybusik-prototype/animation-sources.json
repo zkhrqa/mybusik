@@ -1,0 +1,20 @@
+{
+  "react-bits": {
+    "repository": "https://github.com/DavidHDev/react-bits",
+    "registry": "https://reactbits.dev/r/{name}.json",
+    "components": {
+      "FlipCard": "FlipCard-TS-CSS"
+    },
+    "retrieved": "2026-09-27",
+    "registrySha256": "ea1429f0f59330f4850978a66d69ce46bb29030ea66c4616a12241863bbfded9"
+  },
+  "magicui": {
+    "repository": "https://github.com/magicuidesign/magicui",
+    "registry": "https://magicui.design/r/{name}.json",
+    "components": [
+      "confetti"
+    ],
+    "retrieved": "2026-09-27",
+    "registrySha256": "b81107ad0c151a947fdad2fe2c6441433d50e9aaccd9cbc1712a30bee2fd1231"
+  }
+}

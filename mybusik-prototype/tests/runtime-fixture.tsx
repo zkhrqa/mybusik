@@ -9,7 +9,7 @@ import {
   MobileScroll,
   type FlowScreen,
 } from "../src/mobile";
-import "../src/styles.css";
+import "../src/mobile/legacy-runtime.css";
 import "./runtime-fixture.css";
 
 function CarouselFixture() {

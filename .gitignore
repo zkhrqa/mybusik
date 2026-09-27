@@ -23,3 +23,8 @@ playwright-report/
 
 # Temporary development snapshots
 mybusik-prototype/backups/
+
+# Local mascot videos (excluded at owner request)
+artifacts/busik-transparency/*.mov
+artifacts/busik-transparency/*.webm
+artifacts/busik-transparency/*.mp4
