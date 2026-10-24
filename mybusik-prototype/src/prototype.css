@@ -305,7 +305,7 @@
 .envelope-action{position:relative;display:block;width:min(100%,390px);aspect-ratio:1.13;border:0;background:transparent;padding:0;overflow:visible;isolation:isolate;cursor:pointer;filter:drop-shadow(0 13px 18px #80456626)}
 .busik-app .envelope-action:disabled{opacity:1;cursor:default}
 .envelope-action>span{position:absolute;display:block;pointer-events:none}
-.envelope-glow{z-index:0;inset:5% -10% 2%;border-radius:50%;background:radial-gradient(ellipse,#e490b290 4%,#f3c6d450 38%,transparent 69%);filter:blur(10px);opacity:.48;animation:envelope-glow-breathe 2.6s ease-in-out infinite alternate}
+.envelope-glow{z-index:0;inset:5% 0 2%;border-radius:50%;background:radial-gradient(ellipse,#e490b290 4%,#f3c6d450 38%,transparent 69%);filter:blur(10px);opacity:.48;animation:envelope-glow-breathe 2.6s ease-in-out infinite alternate}
 @keyframes envelope-glow-breathe{to{transform:scale(1.08);opacity:.75}}
 .envelope-back{z-index:1;inset:29% 2% 7%;border-radius:16px;background:linear-gradient(130deg,#dfb7c9,#f5e0e3 70%);box-shadow:inset 0 3px 8px #96546d35,0 9px 20px #713f511f}
 .envelope-letter-sheet{z-index:2;left:13%;right:13%;top:16%;bottom:27%;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e6cbce;border-radius:7px;background:#fffaf4 url('/media/paper.png') center/420px;box-shadow:0 4px 11px #86446626;transform:translateY(14%);visibility:hidden;opacity:0;transition:transform 1.05s cubic-bezier(.18,.75,.22,1),box-shadow .5s ease,opacity .25s ease,visibility 0s linear .25s}
