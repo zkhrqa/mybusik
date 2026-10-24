@@ -20,6 +20,14 @@ npm run dev -- --host 127.0.0.1 --port 4173 --strictPort
 
 Проверка: `npm run build` внутри `mybusik-prototype/`. Она включает TypeScript и проверку целостности зафиксированной инфраструктуры.
 
+## GitHub Pages
+
+Демо: https://zkhrqa.github.io/mybusik/
+
+После отправки в `main` workflow `.github/workflows/pages.yml` собирает сайт и публикует `mybusik-prototype/dist/client`. В Settings → Pages должен быть выбран источник GitHub Actions.
+
+Сборка для Pages: `npm run build:pages` внутри `mybusik-prototype/`. Она использует путь `/mybusik/`; обычная сборка и локальная разработка работают от корня сайта.
+
 ## Текущий статус
 
 Это локальный прототип с шестью базовыми механиками и выбором подачи этапов. Серверное хранение, рабочие ссылки на подарки, оплата, уведомления и готовые анимации персонажа ещё не подключены. Данные теряются после обновления страницы.

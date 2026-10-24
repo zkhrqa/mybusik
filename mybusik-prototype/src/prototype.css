@@ -112,16 +112,14 @@
 @media(max-width:359px){.home-page{padding-left:18px;padding-right:18px}.home-header .brand-logo{width:104px}.how-link{font-size:12px!important}.field-pair{grid-template-columns:1fr}.inner-title{font-size:35px}.journey-layout{padding-left:16px;padding-right:16px}}
 
 /* Pair matching: native buttons, keyboard access and a responsive card grid. */
-.matching-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:460px;margin:0 auto;perspective:1000px}
-.matching-card{display:block;aspect-ratio:4/5;padding:0;border:0;border-radius:14px;background:transparent;color:var(--busik-ink);perspective:700px}
-.matching-card:disabled{opacity:1;cursor:default}
+ .matching-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:460px;margin:0 auto}
+.matching-card{display:block;aspect-ratio:4/5;padding:0;border:0;border-radius:14px;background:#fffaf5;color:var(--busik-ink);overflow:hidden;box-shadow:0 4px 10px #713f510c}
+.busik-app .matching-card:disabled{opacity:1;cursor:default}
 .matching-card:focus-visible{outline:3px solid #a34375;outline-offset:4px}
-.matching-card-inner{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d}
-.matching-card-back,.matching-card-front{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #d5b2c3;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 4px 10px #713f510c}
+.matching-card-inner{display:block;position:relative;width:100%;height:100%;transform-origin:center;backface-visibility:visible}
+.matching-card-back,.matching-card-front{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #d5b2c3;border-radius:14px;background:#fffaf5;overflow:hidden}
 .matching-card-back{background:#eed8e3 url('/media/paper.png') center/500px;gap:12px}
 .matching-card-back>svg{width:28px;height:28px;color:#a65b7c}
-.matching-card-back small{font-size:9px;letter-spacing:1px;color:#9b6d81}
-.matching-card-front{transform:rotateY(180deg);background:#fffaf5}
 .matching-card-front>span{font:42px Georgia,serif;color:#a65b7c}
 .matching-card-front>svg{position:absolute;right:8px;bottom:8px;width:16px;height:16px;color:#7c536b}
 .is-matched .matching-card-front{background:#f0e5e9;border-color:#ad7e98}
@@ -229,3 +227,102 @@
 .personal-letter .letter-greeting{margin-top:18px}
 .personal-letter p.signature{color:var(--busik-ink);margin-top:1em;margin-bottom:0}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Motion layers: paper 0, ambient 0, content 1, controls 20, dialogs 100/101, sparks 110. */
+.busik-app{isolation:isolate}
+.page-layer{z-index:1}
+.logo-heart{display:block;width:100%;height:100%;overflow:hidden}
+.ambient-hearts{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;display:block}
+.ambient-toggle{position:fixed;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;z-index:20;width:36px;height:36px;padding:8px;border:1px solid #b88a9f70;border-radius:50%;background:#fff7edd9;color:#824966;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 10px #713f510a}
+.ambient-toggle svg{width:16px;height:16px}
+.ambient-toggle:hover{background:#f5dce7;color:#48192f}
+.click-spark-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:110;pointer-events:none}
+.busik-app button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.busik-app :is(button,a,input,textarea):focus-visible{outline:2px solid #a5537e;outline-offset:4px}
+.busik-app :is(.primary-button,.secondary-button){position:relative;isolation:isolate;overflow:hidden;transition:background-color .22s ease,border-color .22s ease,box-shadow .22s ease}
+.button-content{position:relative;z-index:1;display:flex;gap:12px;align-items:center;justify-content:center;min-width:0}
+.busik-app .primary-button{background:linear-gradient(110deg,#662647,#7b3658);box-shadow:0 5px 16px #7134531c,inset 0 1px 0 #ffffff20}
+.busik-app .primary-button:not(:disabled):hover{box-shadow:0 8px 24px #7134532f,inset 0 1px 0 #ffffff40}
+.busik-app :is(.primary-button,.secondary-button)::before{content:'';position:absolute;inset:-100% -40%;pointer-events:none;background:linear-gradient(105deg,transparent 40%,#fff4ef40 48%,#ffffff65 50%,transparent 58%);transform:translateX(-75%) rotate(-8deg);opacity:0}
+.busik-app :is(.primary-button,.secondary-button):not(:disabled):is(:hover,:focus-visible,:active)::before{animation:busik-button-sheen .85s ease-out}
+@keyframes busik-button-sheen{0%{transform:translateX(-75%) rotate(-8deg);opacity:0}15%{opacity:1}100%{transform:translateX(75%) rotate(-8deg);opacity:0}}
+.busik-app :is(.gift-option,.presentation-picker button,.quiz-choice,.preview-trigger,.photo-button,.icon-button){transition:transform .2s cubic-bezier(.23,1,.32,1),background-color .2s ease,border-color .2s ease,box-shadow .2s ease}
+.busik-app :is(.gift-option,.presentation-picker button,.quiz-choice,.preview-trigger,.photo-button,.icon-button):not(:disabled):active{transform:scale(.97)}
+.busik-app :is(.small-link,.example-link,.how-link):not(:disabled):hover{color:#a34e77}
+.matching-card-back{background:radial-gradient(ellipse at top,#fff9f4,#f4dfe8);overflow:hidden}
+.matching-card-back>img{width:82%;height:auto;object-fit:contain;position:relative;z-index:1}
+.matching-card-back .card-brand-heart{position:absolute;width:65%;height:70%;right:-15%;bottom:-20%;opacity:.15;transform:rotate(-22deg)}
+.matching-card-back::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,#fff9f580 48%,transparent 70%);transform:translateX(-100%);opacity:0;transition:transform .55s ease,opacity .4s ease}
+.matching-card:not(:disabled):hover .matching-card-back::after{transform:translateX(100%);opacity:1}
+.matching-card{transition:transform .2s ease,filter .3s ease}
+.matching-card:not(:disabled):active{transform:scale(.95)}
+.matching-card.is-matched .matching-card-front{box-shadow:inset 0 0 0 2px #c8789c,0 0 20px #e4a3c52e}
+.scratch-card{box-shadow:0 8px 26px #713f5114;transition:box-shadow .4s ease}
+.scratch-card.is-revealed{box-shadow:0 8px 30px #be73982b}
+.secret-content>.logo-heart{width:32px;height:38px;margin:0 auto}
+.scratch-progress{height:4px;border-radius:10px;overflow:hidden;background:#e8d3dd;margin:16px auto 0;max-width:420px}
+.scratch-progress>span{display:block;height:100%;background:linear-gradient(90deg,#d899b3,#a9517b);transform-origin:left;border-radius:inherit}
+.charge-heart{isolation:isolate;overflow:visible}
+.heart-aura{position:absolute;inset:8% 4%;z-index:-1;border-radius:50%;background:radial-gradient(ellipse,#ed95b8,transparent 68%);pointer-events:none;transition:opacity .35s ease}
+.heart-symbol{display:block;transform-origin:center;transition:color .25s ease;text-shadow:0 6px 18px #b85d8820}
+.heart-count{overflow:hidden;font-variant-numeric:tabular-nums;display:block;position:absolute;inset:auto 0 34%;color:#fffaf6;text-shadow:0 1px 5px #7d264b50;font-weight:600}
+.heart-count>span{display:block}
+.charge-heart.complete{opacity:1}
+.charge-meter>div{background:linear-gradient(90deg,#d999b8,#a94d7a)}
+.ticket-content{transition:opacity .3s ease}
+.tear-coupon.saved .ticket-content{animation:busik-ticket-save .45s cubic-bezier(.23,1,.32,1)}
+@keyframes busik-ticket-save{0%{transform:translateX(18px) rotate(2deg);opacity:.6}100%{transform:translateX(0) rotate(0);opacity:1}}
+.help-dialog,.preview-dialog{overscroll-behavior:contain}
+@media(hover:hover) and (pointer:fine){
+ .busik-app :is(.gift-option,.photo-button,.preview-trigger):not(:disabled):hover{transform:translateY(-2px);box-shadow:0 4px 14px #71345312}
+}
+
+@media(prefers-reduced-motion:reduce){
+ .ambient-hearts,.ambient-toggle,.click-spark-canvas{display:none}
+ .busik-app :is(.gift-option,.photo-button,.preview-trigger,.quiz-choice,.matching-card,.icon-button):not(:disabled):is(:hover,:active){transform:none}
+ .busik-app :is(.primary-button,.secondary-button)::before{display:none}
+}
+
+.celebration span>.logo-heart{width:22px;height:26px}
+.quiz-choice{transition:transform .2s cubic-bezier(.23,1,.32,1),background-color .25s ease,border-color .25s ease}
+.quiz-choice.selected{box-shadow:inset 0 0 0 1px #a8587e,0 4px 16px #b76b9120}
+.answer-reveal,.quiz-summary{animation:busik-answer-reveal .4s ease-out}
+@keyframes busik-answer-reveal{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.puzzle-board button{transition:box-shadow .2s ease}
+.puzzle-board button.selected{box-shadow:0 0 18px #a14f7940}
+.date-machine{transition:box-shadow .4s ease}
+.date-machine:has(+button:disabled){box-shadow:0 7px 0 #d4a0b8,0 0 28px #d383ab2b}
+
+/* The editor has a continuous opaque sheet: ambient hearts stay behind it while scrolling. */
+@media(max-width:1099px){.busik-app .constructor-layout{background:var(--busik-paper) url('/media/paper.png') center/520px}}
+@media(min-width:1100px){.constructor-layout>.inner-page,.constructor-layout>.live-preview{background:var(--busik-paper) url('/media/paper.png') center/520px}}
+
+/* Recipient opening: a solid paper envelope releases the letter after five taps. */
+.recipient-address{line-height:1.55;margin:0 auto 4px}
+.recipient-name,.personal-letter .letter-name{font-family:'Caveat',cursive;font-size:1.23em;font-weight:400;color:#aa4c77;text-shadow:0 2px 10px #df9bb84a}
+.personal-letter .letter-name{font-size:1em;color:#ad537c;text-shadow:0 1px 9px #d77ea65c}
+.envelope-opening{display:grid;justify-items:center;width:100%;margin:0 auto 24px}
+.envelope-action{position:relative;display:block;width:min(100%,390px);aspect-ratio:1.13;border:0;background:transparent;padding:0;overflow:visible;isolation:isolate;cursor:pointer;filter:drop-shadow(0 13px 18px #80456626)}
+.busik-app .envelope-action:disabled{opacity:1;cursor:default}
+.envelope-action>span{position:absolute;display:block;pointer-events:none}
+.envelope-glow{z-index:0;inset:5% -10% 2%;border-radius:50%;background:radial-gradient(ellipse,#e490b290 4%,#f3c6d450 38%,transparent 69%);filter:blur(10px);opacity:.48;animation:envelope-glow-breathe 2.6s ease-in-out infinite alternate}
+@keyframes envelope-glow-breathe{to{transform:scale(1.08);opacity:.75}}
+.envelope-back{z-index:1;inset:29% 2% 7%;border-radius:16px;background:linear-gradient(130deg,#dfb7c9,#f5e0e3 70%);box-shadow:inset 0 3px 8px #96546d35,0 9px 20px #713f511f}
+.envelope-letter-sheet{z-index:2;left:13%;right:13%;top:16%;bottom:27%;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e6cbce;border-radius:7px;background:#fffaf4 url('/media/paper.png') center/420px;box-shadow:0 4px 11px #86446626;transform:translateY(14%);visibility:hidden;opacity:0;transition:transform 1.05s cubic-bezier(.18,.75,.22,1),box-shadow .5s ease,opacity .25s ease,visibility 0s linear .25s}
+.envelope-letter-sheet>.logo-heart{width:34px;height:38px}
+.envelope-to{font:400 clamp(27px,8vw,35px)/1.05 'Caveat',cursive;color:#aa4c77;max-width:90%;overflow-wrap:anywhere;text-align:center}
+.envelope-from{font:400 clamp(19px,5vw,23px)/1 'Caveat',cursive;color:#674052;max-width:90%;overflow-wrap:anywhere;text-align:center}
+.envelope-flap{z-index:5;left:2%;right:2%;top:29%;height:42%;background:linear-gradient(160deg,#f9e8e9,#e6c2d2);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:center top;transition:transform .65s cubic-bezier(.24,.7,.2,1)}
+.envelope-pocket{z-index:4;left:2%;right:2%;bottom:7%;height:45%;border-radius:0 0 16px 16px;background:linear-gradient(125deg,#f9e8e8,#f8e2e4 53%,#efd4dd);clip-path:polygon(0 0,50% 42%,100% 0,100% 100%,0 100%);box-shadow:inset 0 -4px 8px #b7829b24}
+.envelope-seal{z-index:6;left:calc(50% - 23px);top:49%;width:46px;height:46px;border-radius:50%;display:grid!important;place-items:center;background:#fffaf4;box-shadow:0 3px 10px #7c406034;border:1px solid #c780a1;transition:transform .5s ease,opacity .5s ease}
+.envelope-seal>.logo-heart{width:27px;height:31px}
+.envelope-action:not(.is-open):active .envelope-seal{transform:scale(.88)}
+.envelope-action.is-open .envelope-flap{z-index:2;transform:scaleY(-.9)}
+.envelope-action.is-open .envelope-letter-sheet{z-index:3;visibility:visible;opacity:1;transform:translateY(-45%);box-shadow:0 0 32px #e998b6a0,0 8px 22px #86446635;transition-delay:.32s,.32s,.32s,.32s}
+.envelope-action.is-open .envelope-seal{opacity:0;transform:translateY(-32px) scale(.45)}
+.envelope-action.is-open .envelope-glow{opacity:1;transform:scale(1.15)}
+.envelope-instruction{font-size:14px;color:#89516d;text-align:center;margin:0 0 10px}
+.envelope-progress{display:flex;gap:7px;align-items:center}
+.envelope-progress span{width:18px;height:5px;border-radius:999px;background:#e2cad7;transition:background-color .2s ease,transform .2s ease}
+.envelope-progress span.filled{background:#b95783;transform:scaleX(1.08)}
+@media(prefers-reduced-motion:reduce){.envelope-glow{animation:none}.envelope-action>span,.envelope-progress span{transition:none}}

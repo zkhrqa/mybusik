@@ -1,5 +1,6 @@
+import { media } from './media';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react';
+import { AnimatePresence, animate, motion, MotionConfig, useMotionValue, useReducedMotion } from 'motion/react';
 import { ArrowRightIcon, ArrowLeftIcon, HeartIcon, CheckIcon, Cross2Icon, ImageIcon, ReloadIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { Carousel } from './mobile/Carousel';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -16,13 +17,15 @@ import { ListFields, PhotoFields } from './GiftForms';
 import { QuizEditor, QuizGame, defaultQuestions, questionValid, type Question } from './Quiz';
 import FlipCard from './components/react-bits/FlipCard';
 import { Confetti } from './components/magicui/confetti';
+import { AmbientHearts, InteractionFeedback, LogoHeart, haptic, scratchSpark } from './components/effects/GiftEffects';
 
 type Screen = 'home' | 'write' | 'gift' | 'configure' | 'play' | 'ready' | 'recipient' | 'letter';
 const giftChoices = ['Завтрак в постель', 'Вечер только для нас', 'Обниматься сколько угодно'];
 const initialMessage = 'Я подготовил(а) для тебя кое-что особенное.\n\nЗдесь нет ничего сложного — просто несколько вещей, которые я хотел(а) тебе сказать, показать, напомнить.\n\nТак что листай дальше.';
-function Brand() { return <span className="brand-logo"><img src="/media/mybusik-logo-transparent.png" alt="mybusik" draggable={false} /></span>; }
+function Brand() { return <span className="brand-logo"><img src={media('mybusik-logo-transparent.png')} alt="mybusik" draggable={false} /></span>; }
 function Button({ children, onClick, disabled = false, secondary = false }: {children:React.ReactNode;onClick:()=>void;disabled?:boolean;secondary?:boolean}) {
- return <motion.button type="button" className={secondary?'secondary-button':'primary-button'} onClick={onClick} disabled={disabled} whileTap={{scale:.965}} transition={{type:'spring',stiffness:460,damping:24}}>{children}</motion.button>;
+ const reduce=useReducedMotion();
+ return <motion.button type="button" className={secondary?'secondary-button':'primary-button'} onClick={onClick} disabled={disabled} whileHover={reduce||disabled?undefined:{scale:1.025,y:-2}} whileTap={reduce?undefined:{scale:.965,y:1}} transition={{type:'spring',stiffness:460,damping:24}}><span className="button-content">{children}</span></motion.button>;
 }
 const mechanicTitles=['Наши воспоминания','Секрет для тебя','Заряди сердце','Собери наш момент','Найди совпадения','Как хорошо ты меня знаешь?','Купоны с любовью','Автомат свиданий'];
 type Settings={interactive:boolean[];captions:string[];secret:string;heart:string;places:string[];food:string[];activities:string[];coupons:string[];questions:Question[]};
@@ -32,15 +35,15 @@ function Celebration({id,festive=false}:{id:number;festive?:boolean}) {
  const reduce=useReducedMotion();
  if(!id||reduce)return null;
  if(festive)return <Confetti key={id} options={{particleCount:36,spread:80,startVelocity:12,gravity:.9,ticks:80,scalar:.9,origin:{x:.5,y:.65},colors:['#e68191','#d5afd7','#fff4e8','#9b456e'],disableForReducedMotion:true}} globalOptions={{resize:true,useWorker:false}} className="mechanic-confetti" aria-hidden="true"/>;
- return <div className="celebration" aria-hidden="true" key={id}>{Array.from({length:12},(_,i)=><motion.span key={i} initial={{x:0,y:0,opacity:1,scale:.5}} animate={{x:Math.cos(i*Math.PI/6)*110,y:Math.sin(i*Math.PI/6)*100-60,opacity:0,scale:1.2,rotate:i*35}} transition={{duration:.85,ease:'easeOut'}}>♥</motion.span>)}</div>;
+ return <div className="celebration" aria-hidden="true" key={id}>{Array.from({length:12},(_,i)=><motion.span key={i} initial={{x:0,y:0,opacity:1,scale:.5}} animate={{x:Math.cos(i*Math.PI/6)*110,y:Math.sin(i*Math.PI/6)*100-60,opacity:0,scale:1.2,rotate:i*35}} transition={{duration:.85,ease:'easeOut'}}><LogoHeart/></motion.span>)}</div>;
 }
 function StageProgress({current,total,label}:{current:number;total:number;label:string}) {
  return <div className="journey-progress" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={current} aria-label={label}><div className="journey-label"><span>{label}</span><span>{current} / {total}</span></div><div className="journey-segments">{Array.from({length:total},(_,i)=><span key={i} className={i<current?'filled':''}/>)}</div></div>;
 }
-function BusikGuide({text}:{text:string}) {return <aside className="busik-guide"><img src="/media/busik-hero.png" alt=""/><p><b>Бусик рядом</b>{text}</p></aside>;}
+function BusikGuide({text}:{text:string}) {return <aside className="busik-guide"><img src={media('busik-hero.png')} alt=""/><p><b>Бусик рядом</b>{text}</p></aside>;}
 function MemoryGame({photos,captions,interactive=true}:{photos:string[];captions:string[];interactive?:boolean}) {
  const [flipped,setFlipped]=useState<number[]>([]);
- const pics=photos.length?photos:['/media/busik-hero.png'];
+ const pics=photos.length?photos:[media('busik-hero.png')];
  return <>
   <p className="intro">{interactive?'Листай наши моменты. Нажми на фото — там кое-что написано.':'Наши фотографии и маленькие истории.'}</p>
   <Carousel className="memories-carousel" contentClassName="memories-track" ariaLabel="Фото-воспоминания">
@@ -51,6 +54,23 @@ function MemoryGame({photos,captions,interactive=true}:{photos:string[];captions
 }
 const pairSymbols=['♥','☀','✿','☾','♫','✦'];
 const pairNames=['Сердце','Солнце','Цветок','Луна','Музыка','Звезда'];
+function PairFace({open,found,pair,photos,symbol}:{open:boolean;found:boolean;pair:number;photos:string[];symbol:string}) {
+ const reduced=useReducedMotion();
+ const width=useMotionValue(1);
+ const [showFront,setShowFront]=useState(open);
+ const face=useRef(open);
+ useEffect(()=>{
+  if(reduced){face.current=open;setShowFront(open);width.set(1);return;}
+  let cancelled=false;let second:ReturnType<typeof animate>|undefined;
+  if(face.current===open){second=animate(width,1,{duration:.14,ease:'easeOut'});return()=>second?.stop();}
+  const first=animate(width,0,{duration:.16,ease:'easeIn'});
+  first.then(()=>{if(cancelled)return;face.current=open;setShowFront(open);second=animate(width,1,{duration:.19,ease:'easeOut'});});
+  return()=>{cancelled=true;first.stop();second?.stop();};
+ },[open,reduced,width]);
+ return <motion.span className="matching-card-inner" style={{scaleX:width}}>
+  {showFront?<span className="matching-card-front" aria-hidden="true"><span>{photos.length?<img src={photos[pair]} alt="" draggable={false}/>:symbol}</span>{found&&<CheckIcon/>}</span>:<span className="matching-card-back" aria-hidden="true"><img src={media('mybusik-logo-transparent.png')} width="2062" height="763" alt="" draggable={false}/><LogoHeart className="card-brand-heart"/></span>}
+ </motion.span>;
+}
 function MatchingGame({photos=[],interactive=true,onComplete}:{photos?:string[];interactive?:boolean;onComplete:(complete:boolean)=>void}) {
  const pairCount=photos.length||pairSymbols.length;
  const [cards]=useState(()=>{
@@ -59,7 +79,7 @@ function MatchingGame({photos=[],interactive=true,onComplete}:{photos?:string[];
   return deck;
  });
  const [opened,setOpened]=useState<number[]>([]);const [matched,setMatched]=useState<number[]>([]);
- const [attempts,setAttempts]=useState(0);const reduce=useReducedMotion();
+ const [attempts,setAttempts]=useState(0);
  const complete=!interactive||matched.length===cards.length;
  useEffect(()=>{onComplete(complete);},[complete,onComplete]);
  useEffect(()=>{
@@ -71,17 +91,14 @@ function MatchingGame({photos=[],interactive=true,onComplete}:{photos?:string[];
   if(complete||opened.length===2||opened.includes(i)||matched.includes(i))return;
   if(opened.length===0){setOpened([i]);return;}
   setAttempts(n=>n+1);
-  if(cards[opened[0]]===cards[i]){setMatched(prev=>[...prev,opened[0],i]);setOpened([]);}
+  if(cards[opened[0]]===cards[i]){haptic('success');setMatched(prev=>[...prev,opened[0],i]);setOpened([]);}
   else setOpened([opened[0],i]);
  };
  return <><p className="intro">{interactive?'Открывай по две карточки и ищи одинаковые. Найденные пары останутся с тобой.':'Маленькие совпадения — как вы двое.'}</p>
  <div className={"matching-board"+(pairCount===2?" two-pairs":"")} role="group" aria-label="Карточки для поиска пар">{cards.map((pair,i)=>{
   const visible=complete||opened.includes(i)||matched.includes(i);const found=matched.includes(i);
   return <button type="button" key={i} className={'matching-card'+(visible?' is-open':'')+(found?' is-matched':'')} aria-label={`Карточка ${i+1}: ${visible?(photos.length?`Фото ${pair+1}`:pairNames[pair])+(found?', пара найдена':''):'закрыта'}`} aria-pressed={visible} disabled={complete||found||opened.includes(i)||opened.length===2} onClick={()=>choose(i)}>
-   <motion.span className="matching-card-inner" animate={{rotateY:visible?180:0}} transition={{duration:reduce?0:.35}}>
-    <span className="matching-card-back" aria-hidden="true"><HeartIcon/><small>mybusik</small></span>
-    <span className="matching-card-front" aria-hidden="true"><span>{photos.length?<img src={photos[pair]} alt="" draggable={false}/>:pairSymbols[pair]}</span>{found&&<CheckIcon/>}</span>
-   </motion.span>
+   <PairFace open={visible} found={found} pair={pair} photos={photos} symbol={pairSymbols[pair]}/>
   </button>;
  })}</div>
  <p className="hint" role="status">{!interactive?'Все карточки открыты ♥':complete?'Все пары найдены. Вы — любимое совпадение ♥':`Найдено ${matched.length/2} из ${pairCount} пар · попыток: ${attempts}`}</p>
@@ -89,16 +106,36 @@ function MatchingGame({photos=[],interactive=true,onComplete}:{photos?:string[];
  </>;
 }
 function ScratchGame({secret,interactive=true}:{secret:string;interactive?:boolean}) {
- const ref=useRef<HTMLCanvasElement>(null);const drawing=useRef(false);const prev=useRef<{x:number;y:number}|null>(null);const [opened,setOpened]=useState(!interactive);const [progress,setProgress]=useState(0);
- useEffect(()=>{const c=ref.current;const ctx=c?.getContext('2d');if(!ctx||!c)return;ctx.fillStyle='#c796ad';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#fff5f2';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('Сотри сердечный секрет',c.width/2,c.height/2);},[]);
- const point=(e:React.PointerEvent<HTMLCanvasElement>)=>{const c=e.currentTarget,r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height};};
- const erase=(e:React.PointerEvent<HTMLCanvasElement>)=>{const c=e.currentTarget,ctx=c.getContext('2d');if(!ctx)return;const p=point(e);ctx.globalCompositeOperation='destination-out';ctx.lineWidth=34;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.current?.x??p.x,prev.current?.y??p.y);ctx.lineTo(p.x,p.y);ctx.stroke();prev.current=p;};
- const measure=()=>{const c=ref.current,ctx=c?.getContext('2d');if(!ctx||!c)return;const pixels=ctx.getImageData(0,0,c.width,c.height).data;let clear=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]<128)clear++;const n=Math.round(clear/(c.width*c.height)*100);setProgress(n);if(n>=45)setOpened(true);};
- return <><p className="intro">{interactive?'Проведи пальцем или мышью по покрытию.':'Записка только для тебя.'}</p><div className="scratch-card"><div className="secret-content"><HeartIcon/><p>{secret}</p></div>{!opened&&<canvas ref={ref} width={300} height={210} data-scroll-drag="ignore" aria-label="Покрытие секретной открытки" onPointerDown={e=>{drawing.current=true;prev.current=null;e.currentTarget.setPointerCapture(e.pointerId);erase(e);}} onPointerMove={e=>{if(drawing.current)erase(e);}} onPointerUp={()=>{drawing.current=false;prev.current=null;measure();}} onPointerCancel={()=>{drawing.current=false;prev.current=null;}}/>}<Celebration id={opened&&interactive?1:0} festive/></div><p className="hint" role="status">{opened?'Секрет открыт ♥':`Стёрто ${progress}% · после 45% откроется всё`}</p>{!opened&&<button type="button" className="small-link" onClick={()=>setOpened(true)}>Открыть без стирания</button>}</>;
+ const ref=useRef<HTMLCanvasElement>(null);const drawing=useRef(false);const prev=useRef<{x:number;y:number}|null>(null);
+ const lastMeasure=useRef(0);const lastSpark=useRef(0);const lastMilestone=useRef(0);const [opened,setOpened]=useState(!interactive);const [progress,setProgress]=useState(0);const reduce=useReducedMotion();
+ useEffect(()=>{const c=ref.current;const ctx=c?.getContext('2d');if(!ctx||!c)return;
+ const paint=()=>{const r=c.getBoundingClientRect();const dpr=Math.min(devicePixelRatio||1,2);c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);
+ const gradient=ctx.createLinearGradient(0,0,c.width,c.height);gradient.addColorStop(0,'#ddb5c8');gradient.addColorStop(.5,'#bf829f');gradient.addColorStop(1,'#dca8bd');ctx.fillStyle=gradient;ctx.fillRect(0,0,c.width,c.height);
+ ctx.fillStyle='#fff5f280';for(let i=0;i<55;i++){ctx.beginPath();ctx.arc((i*67)%r.width*dpr,(i*43)%r.height*dpr,(i%3===0?1.8:1)*dpr,0,Math.PI*2);ctx.fill();}
+ ctx.fillStyle='#fff9f5';ctx.font=`${32*dpr}px serif`;ctx.textAlign='center';ctx.fillText('♥',c.width/2,c.height/2-14*dpr);ctx.font=`${15*dpr}px sans-serif`;ctx.fillText('Сотри сердечный секрет',c.width/2,c.height/2+20*dpr);};
+ paint();const ro=new ResizeObserver(()=>{const r=c.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);const w=Math.round(r.width*dpr),h=Math.round(r.height*dpr);if(!w||!h||w===c.width&&h===c.height)return;
+ const copy=document.createElement('canvas');copy.width=c.width;copy.height=c.height;copy.getContext('2d')?.drawImage(c,0,0);c.width=w;c.height=h;ctx.drawImage(copy,0,0,w,h);prev.current=null;});ro.observe(c);return()=>ro.disconnect();},[]);
+ const measure=()=>{const c=ref.current,ctx=c?.getContext('2d');if(!ctx||!c)return;const pixels=ctx.getImageData(0,0,c.width,c.height).data;let clear=0;for(let i=3;i<pixels.length;i+=16)if(pixels[i]<128)clear++;const n=Math.round(clear/Math.ceil(c.width*c.height/4)*100);setProgress(n);
+ const milestone=Math.floor(n/15);if(milestone>lastMilestone.current){lastMilestone.current=milestone;haptic(n>=45?'success':'tap');}if(n>=45){drawing.current=false;setOpened(true);}};
+ const erase=(e:React.PointerEvent<HTMLCanvasElement>)=>{const c=e.currentTarget,ctx=c.getContext('2d');if(!ctx)return;const r=c.getBoundingClientRect();const p={x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height};ctx.globalCompositeOperation='destination-out';ctx.lineWidth=34*c.width/r.width;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.current?.x??p.x,prev.current?.y??p.y);ctx.lineTo(p.x,p.y);ctx.stroke();prev.current=p;
+ const now=performance.now();if(now-lastSpark.current>110){scratchSpark(e.clientX,e.clientY);lastSpark.current=now;}if(now-lastMeasure.current>120){measure();lastMeasure.current=now;}};
+ return <><p className="intro">{interactive?'Проведи пальцем или мышью по покрытию.':'Записка только для тебя.'}</p><div className={'scratch-card'+(opened?' is-revealed':'')}><motion.div className="secret-content" animate={{scale:opened?1:.97,opacity:opened?1:.85}} transition={{duration:.45}}><LogoHeart/><p>{secret}</p></motion.div>
+ <AnimatePresence>{!opened&&<motion.canvas ref={ref} width={300} height={210} data-scroll-drag="ignore" aria-label="Покрытие секретной открытки" exit={{opacity:0,scale:reduce?1:1.04}} transition={{duration:.5}} onPointerDown={e=>{drawing.current=true;prev.current=null;haptic();e.currentTarget.setPointerCapture(e.pointerId);erase(e);}} onPointerMove={e=>{if(drawing.current)erase(e);}} onPointerUp={()=>{drawing.current=false;prev.current=null;measure();}} onPointerCancel={()=>{drawing.current=false;prev.current=null;measure();}}/>}</AnimatePresence>
+ <Celebration id={opened&&interactive?1:0} festive/></div>
+ <div className="scratch-progress" role="progressbar" aria-label="Стирание покрытия" aria-valuenow={opened?100:Math.min(100,Math.round(progress/45*100))} aria-valuemin={0} aria-valuemax={100}><motion.span animate={{scaleX:opened?1:Math.min(1,progress/45)}}/></div>
+ <p className="hint" role="status">{opened?'Секрет открыт ♥':`Стёрто ${progress}% · после 45% откроется всё`}</p>{!opened&&<button type="button" className="small-link" onClick={()=>{haptic('success');setOpened(true);}}>Открыть без стирания</button>}</>;
 }
 function HeartGame({text,interactive=true}:{text:string;interactive?:boolean}) {
- const [taps,setTaps]=useState(interactive?0:10);const full=taps>=10;
- return <><p className="intro centered">Каждое касание — немного тепла.</p><div className="heart-game"><motion.button type="button" aria-label="Зарядить сердце" disabled={full} onClick={()=>setTaps(t=>Math.min(10,t+1))} whileTap={{scale:.88}} className={'charge-heart '+(full?'complete':'')}><span className="heart-symbol" aria-hidden="true">♥</span><span>{taps*10}%</span></motion.button><Celebration id={interactive?taps:0} festive={full}/></div><div className="charge-meter" role="progressbar" aria-label="Заряд любви" aria-valuenow={taps*10} aria-valuemin={0} aria-valuemax={100}><motion.div animate={{scaleX:taps/10}}/></div><p className="heart-message" role="status">{full?text:'Бусик бережёт для тебя ещё одно признание.'}</p>{!full&&<button type="button" className="small-link" onClick={()=>setTaps(10)}>Раскрыть сразу</button>}</>;
+ const [taps,setTaps]=useState(interactive?0:10);const full=taps>=10;const reduce=useReducedMotion();
+ return <><p className="intro centered">Каждое касание — немного тепла.</p><div className="heart-game">
+ <motion.button type="button" aria-label={`Зарядить сердце: ${taps*10}%`} disabled={full} onClick={()=>{if(taps===9)haptic('success');setTaps(t=>Math.min(10,t+1));}} whileTap={reduce?undefined:{scale:.92}} className={'charge-heart '+(full?'complete':'')}>
+ <span className="heart-aura" aria-hidden="true" style={{opacity:.12+taps*.06}}/>
+ <motion.span key={taps} className="heart-symbol" aria-hidden="true" initial={false} animate={reduce?{}:{scale:taps?[1,.82,1.12,1]:1,rotate:taps?[0,-5,3,0]:0}} transition={{duration:.55,ease:[.23,1,.32,1]}} style={{color:`hsl(${340-taps*2} 55% ${77-taps*2}%)`}}>♥</motion.span>
+ <span className="heart-count" aria-hidden="true"><motion.span key={taps} initial={reduce?false:{y:12,opacity:0}} animate={{y:0,opacity:1}} transition={{duration:.25}}>{taps*10}%</motion.span></span>
+ </motion.button><Celebration id={interactive?taps:0} festive={full}/></div>
+ <div className="charge-meter" role="progressbar" aria-label="Заряд любви" aria-valuenow={taps*10} aria-valuemin={0} aria-valuemax={100}><motion.div animate={{scaleX:taps/10}} transition={{type:'spring',stiffness:240,damping:24}}/></div>
+ <AnimatePresence mode="wait"><motion.p key={String(full)} className="heart-message" role="status" initial={{opacity:0,y:reduce?0:6}} animate={{opacity:1,y:0}} exit={{opacity:0}}>{full?text:'Бусик бережёт для тебя ещё одно признание.'}</motion.p></AnimatePresence>
+ {!full&&<button type="button" className="small-link" onClick={()=>{haptic('success');setTaps(10);}}>Раскрыть сразу</button>}</>;
 }
 function PuzzleGame({photo,interactive=true}:{photo:string;interactive?:boolean}) {
  const [pieces,setPieces]=useState(interactive?[2,0,3,1]:[0,1,2,3]);const [selected,setSelected]=useState<number|null>(null);const [dragOrigin,setDragOrigin]=useState<number|null>(null);const board=useRef<HTMLDivElement>(null);const suppress=useRef(false);const solved=pieces.every((p,i)=>p===i);
@@ -113,12 +150,29 @@ function DateGame({settings,interactive=true}:{settings:Settings;interactive?:bo
 }
 function CouponGame({coupons,interactive=true}:{coupons:string[];interactive?:boolean}) {
  const [saved,setSaved]=useState<number[]>([]);const [requests,setRequests]=useState<number[]>([]);
- const save=(i:number)=>setSaved(prev=>prev.includes(i)?prev:[...prev,i]);
+ const save=(i:number)=>{haptic('success');setSaved(prev=>prev.includes(i)?prev:[...prev,i]);};
  return <><p className="intro">{interactive?'Потяни билет вправо за пунктирный край или нажми «Забрать».':'Выбери обещание и сохрани его в коллекцию.'}</p><div className="love-coupons">{coupons.map((text,i)=><div className={'tear-coupon '+(saved.includes(i)?'saved':'')} key={i}><motion.div className="ticket-content" data-scroll-drag="ignore" drag={!interactive||saved.includes(i)?false:'x'} dragConstraints={{left:0,right:0}} dragElastic={.8} onDragEnd={(_,info)=>{if(info.offset.x>65)save(i);}}><span className="eyebrow">КУПОН 0{i+1}</span><h2>{text}</h2><div className="perforation" aria-hidden="true"/></motion.div>{saved.includes(i)?<><span className="ticket-status"><CheckIcon/> В твоей коллекции</span><button type="button" className="small-link" disabled={requests.includes(i)} onClick={()=>setRequests(prev=>[...prev,i])}>{requests.includes(i)?'Хочу воспользоваться ♥':'Хочу воспользоваться'}</button></>:<button type="button" className="small-link" onClick={()=>save(i)}>Забрать купон {i+1}</button>}</div>)}</div><p className="hint" role="status">Сохранено {saved.length} из {coupons.length}. Ответы пока остаются в этом предпросмотре.</p><Celebration id={saved.length} festive/></>;
 }
 
+function EnvelopeOpening({to,from,onOpen}:{to:string;from:string;onOpen:()=>void}) {
+ const [taps,setTaps]=useState(0);const reduce=useReducedMotion();const opened=taps>=5;
+ useEffect(()=>{if(!opened)return;const timer=setTimeout(onOpen,reduce?100:1550);return()=>clearTimeout(timer);},[opened,onOpen,reduce]);
+ return <div className="envelope-opening">
+  <button type="button" className={'envelope-action'+(opened?' is-open':'')} aria-label={opened?'Письмо открывается':`Коснись конверта, чтобы открыть письмо. Осталось касаний: ${5-taps}`} disabled={opened} onClick={()=>{setTaps(n=>Math.min(5,n+1));if(taps===4)haptic('success');}}>
+   <span className="envelope-glow" aria-hidden="true"/>
+   <span className="envelope-back" aria-hidden="true"/>
+   <span className="envelope-letter-sheet" aria-hidden="true"><LogoHeart/><span className="envelope-to">{to}</span><span className="envelope-from">от {from}</span></span>
+   <span className="envelope-flap" aria-hidden="true"/>
+   <span className="envelope-pocket" aria-hidden="true"/>
+   <span className="envelope-seal" aria-hidden="true"><LogoHeart/></span>
+  </button>
+  <p className="envelope-instruction" role="status">{opened?'Письмо открывается…':`Коснись конверта ещё ${5-taps} ${5-taps===1||5-taps===5?'раз':'раза'}`}</p>
+  <div className="envelope-progress" role="progressbar" aria-label="Открытие письма" aria-valuemin={0} aria-valuemax={5} aria-valuenow={taps}>{Array.from({length:5},(_,i)=><span key={i} className={i<taps?'filled':''}/>)}</div>
+ </div>;
+}
+
 function PersonalLetterContent({to,from,message,photo='',placeholder=false}:{to:string;from:string;message:string;photo?:string;placeholder?:boolean}) {
- return <><HeartIcon className="letter-heart"/><p className="letter-greeting">{to},</p>{photo&&<img className="personal-photo" src={photo} alt="Ваше общее воспоминание"/>}<p className={placeholder?'draft-placeholder':''}>{message}</p><p className="signature">С любовью,{'\n'}{from}</p></>;
+ return <><HeartIcon className="letter-heart"/><p className="letter-greeting"><span className="letter-name">{to}</span>,</p>{photo&&<img className="personal-photo" src={photo} alt="Ваше общее воспоминание"/>}<p className={placeholder?'draft-placeholder':''}>{message}</p><p className="signature">С любовью,{'\n'}<span className="letter-name">{from}</span></p></>;
 }
 
 const ignoreCompletion=(_:boolean)=>{};
@@ -157,7 +211,7 @@ export default function Prototype() {
  const configValid=configIndex===1?!!settings.secret.trim():configIndex===2?!!settings.heart.trim():configIndex===4?pairPhotos.length!==1:configIndex===5?settings.questions.length>0&&settings.questions.every(questionValid):configIndex===6?settings.coupons.every(v=>!!v.trim()):configIndex===7?[settings.places,settings.food,settings.activities].every(v=>v.length>0&&v.every(item=>!!item.trim())):true;
  const back=()=>{if(screen==='configure'&&configIndex>0){dismissInput();setConfigIndex(i=>i-1);return;}if(screen==='play'&&playIndex>0){setPlayIndex(i=>i-1);return;}go(screen==='write'?'home':screen==='gift'?'write':screen==='configure'?'gift':screen==='ready'?'configure':screen==='recipient'?demo?'home':'ready':screen==='play'?'letter':screen==='letter'?'recipient':'home');};
  const title=screen==='configure'?mechanicTitles[configIndex]:screen==='play'?mechanicTitles[playIndex]:screen==='write'?'Пару слов от сердца':screen==='gift'?'И маленький подарок':screen==='ready'?'Всё готово, с любовью':screen==='recipient'?'Тебе кое-что передали':screen==='letter'?displayName:'';
- const mascot=<motion.img key={bump} className="mascot" src="/media/busik-hero.png" alt="Бусик держит письмо для тебя" draggable={false} animate={bump&&!reduce?{rotate:[0,-3,3,0],scale:[1,.97,1.025,1]}:{}} transition={{duration:.65}}/>;
+ const mascot=<motion.img key={bump} className="mascot" src={media('busik-hero.png')} alt="Бусик держит письмо для тебя" draggable={false} animate={bump&&!reduce?{rotate:[0,-3,3,0],scale:[1,.97,1.025,1]}:{}} transition={{duration:.65}}/>;
  const author=['write','gift','configure','ready'].includes(screen);
  const constructing=['write','gift','configure'].includes(screen);
  const editorPhotos=memoryPhotos.length?memoryPhotos:photo?[photo]:[];
@@ -166,14 +220,14 @@ export default function Prototype() {
  const stageDraft=screen==='write'?[name,from,message,photo]:screen==='gift'?[gift,customGift,photo]:[settings.interactive[configIndex],configIndex===0?[editorPhotos,settings.captions]:configIndex===1?settings.secret:configIndex===2?settings.heart:configIndex===3?[puzzlePhoto,editorPhotos[0]]:configIndex===4?pairPhotos:configIndex===5?settings.questions:configIndex===6?settings.coupons:[settings.places,settings.food,settings.activities]];
  const draftKey=JSON.stringify([screen,configIndex,stageDraft,previewReset]);
  const draftValid=screen!=='configure'||(configIndex!==5||settings.questions.every(questionValid))&&(configIndex!==4||pairPhotos.length!==1);
- const previewContent=<div className="preview-stage" key={draftKey}>{screen!=='write'&&<h3>{previewTitle}</h3>}{screen==='write'?<article className="personal-letter"><PersonalLetterContent to={name.trim()||'Мой бусик'} from={from.trim()||'Твой человек'} message={message.trim()||'Здесь появятся твои тёплые слова.'} photo={photo} placeholder={!message.trim()}/></article>:screen==='gift'?<article className="tear-coupon"><span className="eyebrow">КУПОН С ЛЮБОВЬЮ</span><h2>{gift==='Свой подарок'?customGift.trim()||'Твоё маленькое обещание':gift}</h2><div className="perforation"/><p className="hint">Когда захочешь — просто напомни.</p></article>:draftValid?<div className="mechanic-surface"><MechanicStage index={configIndex} settings={{...settings,secret:settings.secret||'Здесь будет твой секрет.',heart:settings.heart||'Здесь будет твоё признание.'}} photos={editorPhotos} pairPhotos={pairPhotos} puzzlePhoto={puzzlePhoto[0]||editorPhotos[0]||'/media/busik-hero.png'} author={from.trim()||'Твой человек'}/></div>:<p className="preview-empty">{configIndex===5?'Заполни вопрос, варианты и свой ответ — здесь можно будет пройти тест.':'Добавь второе фото — и здесь появится игра с парами.'}</p>}</div>;
+ const previewContent=<div className="preview-stage" key={draftKey}>{screen!=='write'&&<h3>{previewTitle}</h3>}{screen==='write'?<article className="personal-letter"><PersonalLetterContent to={name.trim()||'Мой бусик'} from={from.trim()||'Твой человек'} message={message.trim()||'Здесь появятся твои тёплые слова.'} photo={photo} placeholder={!message.trim()}/></article>:screen==='gift'?<article className="tear-coupon"><span className="eyebrow">КУПОН С ЛЮБОВЬЮ</span><h2>{gift==='Свой подарок'?customGift.trim()||'Твоё маленькое обещание':gift}</h2><div className="perforation"/><p className="hint">Когда захочешь — просто напомни.</p></article>:draftValid?<div className="mechanic-surface"><MechanicStage index={configIndex} settings={{...settings,secret:settings.secret||'Здесь будет твой секрет.',heart:settings.heart||'Здесь будет твоё признание.'}} photos={editorPhotos} pairPhotos={pairPhotos} puzzlePhoto={puzzlePhoto[0]||editorPhotos[0]||media('busik-hero.png')} author={from.trim()||'Твой человек'}/></div>:<p className="preview-empty">{configIndex===5?'Заполни вопрос, варианты и свой ответ — здесь можно будет пройти тест.':'Добавь второе фото — и здесь появится игра с парами.'}</p>}</div>;
  const stageCurrent=screen==='write'?1:screen==='gift'?2:screen==='configure'?configIndex+3:screen==='ready'?mechanicTitles.length+3:screen==='recipient'?1:screen==='letter'?2:playIndex+3;
  const stageNames=author?['Твои слова','Маленький подарок',...mechanicTitles,'Предпросмотр']:['Открытие подарка','Личное письмо',...mechanicTitles];
- return <MotionConfig reducedMotion="user"><div className="busik-app" data-screen={screen}>
+ return <MotionConfig reducedMotion="user"><div className="busik-app" data-screen={screen}><AmbientHearts/><InteractionFeedback/>
  <AnimatePresence mode="wait" initial={false}><motion.div className="page-layer" key={screen} initial={{opacity:0,y:reduce?0:12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduce?0:-8}} transition={{duration:.2}}>
  {screen!=='home'&&<div className="journey-shell"><header className="inner-header"><button type="button" className="icon-button" aria-label="Назад" onClick={back}><ArrowLeftIcon/></button><Brand/><button type="button" className="icon-button" aria-label="На главную" onClick={()=>go('home')}><Cross2Icon/></button></header><StageProgress current={stageCurrent} total={stageNames.length} label={author?'Собираем твой сюрприз':'История для тебя'}/></div>}
  <div className={screen==='home'?'home-layout':'journey-layout'+(constructing?' constructor-layout':'')}>
- {screen!=='home'&&!constructing&&<aside className="desktop-guide"><span className="eyebrow">{author?'ПОДАРОК СВОИМИ РУКАМИ':'МАЛЕНЬКАЯ ИСТОРИЯ О ВАС'}</span><img className="desktop-busik" src="/media/busik-hero.png" alt="Бусик сопровождает твою историю" draggable={false}/><h2>{author?<>Давай соберём<br/>немного счастья</>:<>Здесь всё<br/>с любовью</>}</h2><p>{author?'Твои слова и ваши моменты. Я помогу превратить их в сюрприз.':'Открывай сюрпризы в своём темпе. Бусик будет рядом.'}</p><ol aria-label="Этапы подарка">{stageNames.map((name,i)=><li key={name} aria-current={i===stageCurrent-1?'step':undefined} className={i<stageCurrent-1?'done':''}><span>{i<stageCurrent-1?<CheckIcon/>:String(i+1).padStart(2,'0')}</span>{name}</li>)}</ol></aside>}
+ {screen!=='home'&&!constructing&&<aside className="desktop-guide"><span className="eyebrow">{author?'ПОДАРОК СВОИМИ РУКАМИ':'МАЛЕНЬКАЯ ИСТОРИЯ О ВАС'}</span><img className="desktop-busik" src={media('busik-hero.png')} alt="Бусик сопровождает твою историю" draggable={false}/><h2>{author?<>Давай соберём<br/>немного счастья</>:<>Здесь всё<br/>с любовью</>}</h2><p>{author?'Твои слова и ваши моменты. Я помогу превратить их в сюрприз.':'Открывай сюрпризы в своём темпе. Бусик будет рядом.'}</p><ol aria-label="Этапы подарка">{stageNames.map((name,i)=><li key={name} aria-current={i===stageCurrent-1?'step':undefined} className={i<stageCurrent-1?'done':''}><span>{i<stageCurrent-1?<CheckIcon/>:String(i+1).padStart(2,'0')}</span>{name}</li>)}</ol></aside>}
  <main className={screen==='home'?'home-page':'inner-page'}>
  {screen==='home'?<>
   <header className="home-header"><Brand/><button type="button" className="how-link" onClick={()=>setHelp(true)}>Как это работает <ArrowRightIcon/></button></header>
@@ -210,7 +264,7 @@ export default function Prototype() {
 </>}
 {configIndex===1&&<label className="config-field">Твой секрет<textarea value={settings.secret} maxLength={240} rows={3} onChange={e=>setField('secret',e.target.value)}/></label>}
 {configIndex===2&&<label className="config-field">Признание после 100%<textarea value={settings.heart} maxLength={240} rows={3} onChange={e=>setField('heart',e.target.value)}/></label>}
-{configIndex===3&&<><PhotoFields title="Фото для пазла" photos={puzzlePhoto} onChange={setPuzzlePhoto} max={1}/><img className="puzzle-preview" src={puzzlePhoto[0]||pics[0]||'/media/busik-hero.png'} alt="Фото для пазла"/><p className="hint">Без отдельного фото возьмём первое воспоминание или Бусика. Четыре фрагмента можно перетаскивать или менять местами.</p></>}
+{configIndex===3&&<><PhotoFields title="Фото для пазла" photos={puzzlePhoto} onChange={setPuzzlePhoto} max={1}/><img className="puzzle-preview" src={puzzlePhoto[0]||pics[0]||media('busik-hero.png')} alt="Фото для пазла"/><p className="hint">Без отдельного фото возьмём первое воспоминание или Бусика. Четыре фрагмента можно перетаскивать или менять местами.</p></>}
 {configIndex===4&&<><p className="intro">Добавь 2–6 разных снимков. Каждый появится на двух карточках. Без фото игра будет с символами.</p><PhotoFields title="Фото для совпадений" photos={pairPhotos} onChange={setPairPhotos}/>{pairPhotos.length===1&&<p className="field-error" role="alert">Добавь ещё хотя бы одно фото, чтобы было что искать, или удали фото для игры с символами.</p>}<p className="hint">{pairPhotos.length?`${pairPhotos.length} фото → ${pairPhotos.length*2} карточек`:'6 пар символов → 12 карточек'}. Совпавшие пары остаются открытыми.</p></>}
 {configIndex===5&&<QuizEditor questions={settings.questions} onChange={value=>setField('questions',value)}/>}
 {configIndex===6&&<ListFields title="Купоны с любовью" values={settings.coupons} onChange={value=>setField('coupons',value)} placeholder="Например, массаж после длинного дня"/>}
@@ -219,17 +273,17 @@ export default function Prototype() {
 </form>}
 {screen==='play'&&<>
 <BusikGuide text={['Я принёс ваши маленькие счастливые моменты.','Здесь спрятано кое-что только для тебя.','Добавим немного тепла?','Поможешь собрать один счастливый момент?','У каждой карточки есть пара. Найдём все совпадения?','Давай узнаем, как хорошо вы знаете друг друга.','Эти обещания можно забрать с собой.','А теперь выберем ваш следующий вечер вместе.'][playIndex]}/>
-<div key={playIndex} className="mechanic-surface"><MechanicStage index={playIndex} settings={activeSettings} photos={pics} pairPhotos={demo?[]:pairPhotos} puzzlePhoto={(!demo&&puzzlePhoto[0])||pics[0]||'/media/busik-hero.png'} author={displayFrom} onPairsComplete={setPairsComplete} onQuizComplete={setQuizComplete}/></div>
+<div key={playIndex} className="mechanic-surface"><MechanicStage index={playIndex} settings={activeSettings} photos={pics} pairPhotos={demo?[]:pairPhotos} puzzlePhoto={(!demo&&puzzlePhoto[0])||pics[0]||media('busik-hero.png')} author={displayFrom} onPairsComplete={setPairsComplete} onQuizComplete={setQuizComplete}/></div>
 {playIndex<mechanicTitles.length-1?<div className="form-bottom"><Button disabled={(playIndex===4&&activeSettings.interactive[4]&&!pairsComplete)||(playIndex===5&&activeSettings.interactive[5]&&!quizComplete)} onClick={()=>{setPairsComplete(false);setQuizComplete(false);setPlayIndex(i=>i+1);}}>{playIndex===6?'К автомату свиданий':'Следующий сюрприз'} <ArrowRightIcon/></Button></div>:<div className="journey-ending"><p className="hint">С любовью, {displayFrom}. Пусть впереди будет ещё много ваших моментов.</p><button type="button" className="small-link replay" onClick={()=>preview(demo)}><ReloadIcon/> Посмотреть ещё раз</button></div>}
 </>}
 {screen==='ready'&&<>
-   <div className="small-mascot">{mascot}</div><p className="intro centered">Кому: <strong>{name.trim()||'Мой бусик'}</strong><br/>С любовью, {from.trim()||'Твой человек'}.</p>
+   <div className="small-mascot">{mascot}</div><p className="intro centered">Кому: <strong className="recipient-name">{name.trim()||'Мой бусик'}</strong><br/>С любовью, <span className="recipient-name">{from.trim()||'Твой человек'}</span>.</p>
    <Button onClick={()=>preview(false)}>Открыть свой сюрприз <ArrowRightIcon/></Button><button type="button" className="example-link" onClick={()=>go('write')}>Изменить послание</button><p className="prototype-note">Это пробная версия: можно собрать и посмотреть подарок. Публикация ссылки и оплата появятся позже.</p>
   </>}
   {screen==='recipient'&&<>
-   <p className="intro centered">Кому: {displayName}<br/><span className="muted">С любовью, {displayFrom}</span></p>
-   <motion.button type="button" className="mascot-stage recipient-mascot" aria-label="Открыть письмо" whileTap={{scale:.95,rotate:-2}} onClick={()=>go('letter')}>{mascot}</motion.button>
-   <Button onClick={()=>go('letter')}>Открыть сюрприз <HeartIcon/></Button><p className="hint">Здесь кое-кто очень тебя любит.</p>
+   <p className="intro centered recipient-address">Кому: <span className="recipient-name">{displayName}</span><br/><span className="muted">С любовью, <span className="recipient-name">{displayFrom}</span></span></p>
+   <EnvelopeOpening to={displayName} from={displayFrom} onOpen={()=>go('letter')}/>
+   <p className="hint">Здесь кое-кто очень тебя любит.</p>
   </>}
   {screen==='letter'&&<>
    <motion.article className="personal-letter" initial={{rotate:reduce?0:-3,scale:.95,opacity:0}} animate={{rotate:0,scale:1,opacity:1}} transition={{type:'spring',stiffness:200,damping:23}}>

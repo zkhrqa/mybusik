@@ -2,9 +2,9 @@
 
 React Bits FlipCard (TS-CSS) and Magic UI Confetti were imported as editable source, not entire applications or git submodules. Retrieved 2026-09-27.
 
-## React Bits FlipCard
+## React Bits FlipCard and ClickSpark
 
-Source: https://reactbits.dev/r/FlipCard-TS-CSS.json
+Sources: https://reactbits.dev/r/FlipCard-TS-CSS.json and https://reactbits.dev/r/ClickSpark-TS-CSS.json
 Repository: https://github.com/DavidHDev/react-bits
 
 Local changes: tap-only mode uses click instead of pointer-up so MobileScroll and Carousel can suppress accidental activation after dragging; keyboard respects flipOnClick. Reduced-motion focus and CSS are styled in prototype.css.
@@ -67,3 +67,9 @@ SOFTWARE.
 ## Caveat handwriting font
 
 Locally bundled with `@fontsource/caveat` for personal letters and the message editor. Cyrillic and Latin subsets, normal weight 400. The font's license is preserved in `public/fonts/caveat-LICENSE.txt`.
+
+## Motion design references
+
+React Bits PulseHeart and FuseButton informed the heart pulse/count transition and button feedback; implemented with the existing Motion and Radix dependencies. ClickSpark is adapted as editable source with a viewport canvas, capped DPR and particle count, demand-driven frames, scratch events, and reduced-motion support. The React Bits license above applies.
+
+Layout and interaction guidance: https://github.com/Leonxlnx/taste-skill/blob/main/skills/taste-skill/SKILL.md and https://github.com/vercel-labs/web-interface-guidelines. Existing brand typography, palette, and product flow are preserved.

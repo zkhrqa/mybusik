@@ -3,10 +3,20 @@
     "repository": "https://github.com/DavidHDev/react-bits",
     "registry": "https://reactbits.dev/r/{name}.json",
     "components": {
-      "FlipCard": "FlipCard-TS-CSS"
+      "FlipCard": "FlipCard-TS-CSS",
+      "ClickSpark": "ClickSpark-TS-CSS"
     },
     "retrieved": "2026-09-27",
-    "registrySha256": "ea1429f0f59330f4850978a66d69ce46bb29030ea66c4616a12241863bbfded9"
+    "registrySha256": "ea1429f0f59330f4850978a66d69ce46bb29030ea66c4616a12241863bbfded9",
+    "inspiration": {
+      "PulseHeart": "PulseHeart-TS-CSS",
+      "FuseButton": "FuseButton-TS-CSS"
+    },
+    "additionalRegistrySha256": {
+      "ClickSpark": "c88ce464d3d0001e9ec0722a36854b24fa9b3ea7e2a92ead7b6c5f5a138b74c4",
+      "PulseHeart": "59ade1993a7c88b9be847439ae04b1809f52376d77a0e72ce94893ee649fd060",
+      "FuseButton": "e838bc032a292845fbc0c27aefc961c5175e5f513da1f10891ba3d8da664cdd4"
+    }
   },
   "magicui": {
     "repository": "https://github.com/magicuidesign/magicui",
